@@ -404,14 +404,20 @@ class ImporterController < ApplicationController
       issue.done_ratio = row[attrs_map["done_ratio"]] || issue.done_ratio
       issue.estimated_hours = row[attrs_map["estimated_hours"]] || issue.estimated_hours
 
-      ["start_date", "due_date"].each do |date_attr|
-        begin
-          issue.send("#{date_attr}=", Date.parse(row[attrs_map[date_attr]])) if row[attrs_map[date_attr]].present?
-        rescue ArgumentError
-          @failed_count += 1
-          @failed_issues[@failed_count] = row
-          @messages << "Warning: When setting the #{date_attr} for issue #{@failed_count}, #{row[attrs_map[date_attr]]} is not valid date"
-        end
+      begin
+        issue.start_date = Date.parse(row[attrs_map["start_date"]]) if row[attrs_map["start_date"]].present?
+      rescue ArgumentError
+        @failed_count += 1
+        @failed_issues[@failed_count] = row
+        @messages << "Warning: When setting the start_date for issue #{@failed_count}, #{row[attrs_map["start_date"]]} is not valid date"
+      end
+
+      begin
+        issue.due_date = Date.parse(row[attrs_map["due_date"]]) if row[attrs_map["due_date"]].present?
+      rescue ArgumentError
+        @failed_count += 1
+        @failed_issues[@failed_count] = row
+        @messages << "Warning: When setting the start_date for issue #{@failed_count}, #{row[attrs_map["due_date"]]} is not valid date"
       end
 
       # parent issues
