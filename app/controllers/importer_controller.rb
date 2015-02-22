@@ -399,12 +399,13 @@ class ImporterController < ApplicationController
       issue.description = description ?
           description.gsub(/\r\n?|\\n|<br\s*\/?>/, "\n") : issue.description
       issue.category_id = category != nil ? category.id : issue.category_id
-      issue.start_date = row[attrs_map["start_date"]].blank? ? nil : Date.parse(row[attrs_map["start_date"]])
-      issue.due_date = row[attrs_map["due_date"]].blank? ? nil : Date.parse(row[attrs_map["due_date"]])
       issue.assigned_to_id = assigned_to != nil ? assigned_to.id : issue.assigned_to_id
       issue.fixed_version_id = fixed_version_id != nil ? fixed_version_id : issue.fixed_version_id
       issue.done_ratio = row[attrs_map["done_ratio"]] || issue.done_ratio
       issue.estimated_hours = row[attrs_map["estimated_hours"]] || issue.estimated_hours
+
+      set_date_safely(issue, "start_date", row[attrs_map["start_date"]], row)
+      set_date_safely(issue, "due_date", row[attrs_map["due_date"]], row)
 
       # parent issues
       begin
@@ -563,4 +564,13 @@ private
     flash[type] += "#{text}<br/>"
   end
 
+  def set_date_safely(issue, date_attr, value, row)
+    begin
+      issue.send("#{date_attr}=", value.try(:to_date))
+    rescue
+      @failed_count += 1
+      @failed_issues[@failed_count] = row
+      @messages << "Warning: When setting the #{date_attr} for issue #{@failed_count}, #{value} is not valid date"
+    end
+  end
 end
