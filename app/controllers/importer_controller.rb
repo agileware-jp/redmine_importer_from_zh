@@ -23,6 +23,11 @@ class ImporterController < ApplicationController
     :start_date, :due_date, :done_ratio, :estimated_hours,
     :parent_issue, :watchers ]
 
+  # lad暫定対応
+  if ActiveRecord::Base.connection.column_exists?(:issues, :actual_start_date)
+    ISSUE_ATTRS << :actual_start_date << :actual_due_date
+  end
+
   def index; end
 
   def match
@@ -406,6 +411,12 @@ class ImporterController < ApplicationController
 
       set_date_safely(issue, "start_date", row[attrs_map["start_date"]], row)
       set_date_safely(issue, "due_date", row[attrs_map["due_date"]], row)
+
+      # lad暫定対応
+      if ActiveRecord::Base.connection.column_exists?(:issues, :actual_start_date)
+        set_date_safely(issue, "actual_start_date", row[attrs_map["actual_start_date"]], row)
+        set_date_safely(issue, "actual_due_date", row[attrs_map["actual_due_date"]], row)
+      end
 
       # parent issues
       begin
