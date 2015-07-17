@@ -340,6 +340,7 @@ class ImporterController < ApplicationController
 
       if update_issue
         begin
+          reserved_issue_for_exception = issue
           issue = issue_for_unique_attr(unique_attr,row[unique_field],row)
 
           # ignore other project's issue or not
@@ -368,10 +369,8 @@ class ImporterController < ApplicationController
             @skip_count += 1
             next
           else
-            @failed_count += 1
-            @failed_issues[@failed_count] = row
-            @messages << "Warning: Could not update issue #{@failed_count} below, no match for the value #{row[unique_field]} were found"
-            next
+            # continue to create an issue even there is no unique issue.
+            issue = reserved_issue_for_exception
           end
 
         rescue MultipleIssuesForUniqueValue
